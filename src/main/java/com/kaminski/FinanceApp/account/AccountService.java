@@ -39,4 +39,9 @@ public class AccountService {
         }
         accountRepository.deleteById(id);
     }
+
+    public AccountResponse getAccountById(Long id) {
+        return accountRepository.findById(id).map(acc -> new AccountResponse(acc.getId(), acc.getName(), acc.getBalance()))
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono konta o podanym ID!"));
+    }
 }
