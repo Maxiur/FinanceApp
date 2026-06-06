@@ -115,22 +115,18 @@ public class TransactionService {
         return csv.toString();
     }
 
-    private Account getAccountById(Long id) {
-        return accountRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
-    }
-
-    private Account getAccountByName(String name) {
-        return accountRepository.findByName(name).orElseThrow(
-                () -> new ResourceNotFoundException("Nie znaleziono konta o podanej nazwie: " + name));
-    }
-
-    private Account resolveAccount(String accountParam) {
+    private Account resolveAccount(String param) {
         try {
-            Long id = Long.parseLong(accountParam);
-            return getAccountById(id);
+            Long numericId = Long.parseLong(param);
+            System.out.println(numericId);
+            if (numericId <= 0) {
+                throw new ConflictException("ID konta musi być liczbą dodatnią!");
+            }
+            return accountRepository.findById(numericId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o ID: " + numericId));
         } catch (NumberFormatException e) {
-            return getAccountByName(accountParam);
+            return accountRepository.findByName(param)
+                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o nazwie: " + param));
         }
     }
 }
