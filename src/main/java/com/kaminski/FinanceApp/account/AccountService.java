@@ -14,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AccountService {
     // Wstrzykujemy repozytorium
+    private final AccountResolver accountResolver;
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
@@ -21,7 +22,7 @@ public class AccountService {
     // Wszystkie konta
     public List<AccountResponse> getAllAccounts() {
         return accountRepository.findAll().stream()
-                .map(acc -> new AccountResponse(acc.getId(), acc.getName(), acc.getBalance()))
+                .map(this::mapToResponse)
                 .toList();
     }
 
@@ -36,13 +37,13 @@ public class AccountService {
                 .name(request.name()).build();
 
         Account savedAccount = accountRepository.save(account);
-        return new AccountResponse(savedAccount.getId(), savedAccount.getName(), savedAccount.getBalance());
+        return mapToResponse(savedAccount);
     }
 
     // Usuwanie konta
     @Transactional
     public void deleteAccount(String idOrName) {
-        Account account = resolveAccount(idOrName);
+        Account account = accountResolver.resolve(idOrName);
 
         if (transactionRepository.existsByAccountId(account.getId())) {
             throw new UnprocessableContentException("Nie można usunąć konta, które ma historię transakcji!");
@@ -51,21 +52,11 @@ public class AccountService {
     }
 
     public AccountResponse getAccountDetails(String param) {
-        Account account = resolveAccount(param);
-        return new AccountResponse(account.getId(), account.getName(), account.getBalance());
+        Account account = accountResolver.resolve(param);
+        return mapToResponse(account);
     }
 
-    private Account resolveAccount(String param) {
-        try {
-            Long numericId = Long.parseLong(param);
-            if (numericId <= 0) {
-                throw new UnprocessableContentException("ID konta musi być liczbą dodatnią!");
-            }
-            return accountRepository.findById(numericId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o ID: " + numericId));
-        } catch (NumberFormatException e) {
-            return accountRepository.findByName(param)
-                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o nazwie: " + param));
-        }
+    private AccountResponse mapToResponse(Account account) {
+        return new AccountResponse(account.getId(), account.getName(), account.getBalance());
     }
 }

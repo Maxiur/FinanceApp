@@ -20,23 +20,17 @@ public class SummaryService {
         List<Transaction> transactions = transactionRepository.findAll();
 
         // Łączne pieniądze z przychodów
-        BigDecimal totalIncome = transactions.stream()
-                .filter(t -> t.getType() == TransactionType.INCOME)
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalIncome = transactionRepository.calculateTotalAmountByType(TransactionType.INCOME);
 
         // Łaczne pieniądze z wydatków
-        BigDecimal totalExpenses = transactions.stream()
-                .filter(t -> t.getType() == TransactionType.EXPENSE)
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalExpenses = transactionRepository.calculateTotalAmountByType(TransactionType.EXPENSE);
 
         // Grupowanie wydatków po kategorii (np. "Jedzenie" -> 150.50)
-        Map<String, BigDecimal> expensesByCategory = transactions.stream()
-                .filter(t -> t.getType() == TransactionType.EXPENSE)
-                .collect(Collectors.groupingBy(
-                        Transaction::getCategory,
-                        Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
+        // Mapujemy surową odpowiedź z bazy (Object[]) na Mapę dla JSON-a
+        Map<String, BigDecimal> expensesByCategory = transactionRepository.getExpensesGroupedByCategory().stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],         // kategoria
+                        row -> (BigDecimal) row[1]      // suma dla kategorii
                 ));
 
         return new SummaryResponse(totalIncome, totalExpenses, expensesByCategory);

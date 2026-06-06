@@ -3,6 +3,7 @@ package com.kaminski.FinanceApp.transaction;
 import com.kaminski.FinanceApp.account.Account;
 import com.kaminski.FinanceApp.account.AccountRepository;
 
+import com.kaminski.FinanceApp.account.AccountResolver;
 import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
 import com.kaminski.FinanceApp.exception.UnprocessableContentException;
 import lombok.RequiredArgsConstructor;
@@ -17,28 +18,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionService {
     private final TransactionRepository transactionRepository;
-    private final AccountRepository accountRepository;
+    private final AccountResolver accountResolver;
 
     public List<TransactionResponse> getTransactionsForAccount(String accountId, LocalDate from, LocalDate to, String category) {
-        Account account = resolveAccount(accountId);
+        Account account = accountResolver.resolve(accountId);
         // Konwersja LocalDate na LocalDateTime
         // 'from' ustawiamy na początek dnia (00:00:00)
         LocalDateTime fromDateTime = (from != null) ? from.atStartOfDay() : null;
         // 'to' ustawiamy na koniec dnia (23:59:59), żeby łapało transakcje z tego dnia
         LocalDateTime toDateTime = (to != null) ? to.atTime(23, 59, 59) : null;
+        String categoryParam = (category == null) ? "" : category.toLowerCase();
 
-        return transactionRepository.findFilteredTransactions(account.getId(), fromDateTime, toDateTime, category)
+        return transactionRepository.findFilteredTransactions(account.getId(), fromDateTime, toDateTime, categoryParam)
                 .stream()
-                .map(t -> new TransactionResponse(
-                        t.getId(), t.getAmount(), t.getType(), t.getCategory(),
-                        t.getDescription(), t.getTransactionDate(), t.getAccount().getId()
-                ))
+                .map(this::mapToResponse)
                 .toList();
     }
 
     @Transactional
     public TransactionResponse addTransaction(String accountId, TransactionRequest request) {
-        Account account = resolveAccount(accountId);
+        Account account = accountResolver.resolve(accountId);
 
         // Aktualizacja salda konta
         if (request.type() == TransactionType.INCOME) {
@@ -60,15 +59,7 @@ public class TransactionService {
         // Zapis transakcji do DB
         Transaction savedTransaction = transactionRepository.save(transaction);
 
-        return new TransactionResponse(
-                savedTransaction.getId(),
-                savedTransaction.getAmount(),
-                savedTransaction.getType(),
-                savedTransaction.getCategory(),
-                savedTransaction.getDescription(),
-                savedTransaction.getTransactionDate(),
-                account.getId()
-        );
+        return mapToResponse(savedTransaction);
     }
 
     @Transactional
@@ -93,7 +84,7 @@ public class TransactionService {
     }
 
     public String exportToCsv(String accountId) {
-        Account account = resolveAccount(accountId);
+        Account account = accountResolver.resolve(accountId);
 
         List<Transaction> transactions = transactionRepository.findAll().stream()
                 .filter(t -> t.getAccount().getId().equals(account.getId()))
@@ -111,17 +102,15 @@ public class TransactionService {
         return csv.toString();
     }
 
-    private Account resolveAccount(String param) {
-        try {
-            Long numericId = Long.parseLong(param);
-            if (numericId <= 0) {
-                throw new UnprocessableContentException("ID konta musi być liczbą dodatnią!");
-            }
-            return accountRepository.findById(numericId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o ID: " + numericId));
-        } catch (NumberFormatException e) {
-            return accountRepository.findByName(param)
-                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o nazwie: " + param));
-        }
+    private TransactionResponse mapToResponse(Transaction t) {
+        return new TransactionResponse(
+                t.getId(),
+                t.getAmount(),
+                t.getType(),
+                t.getCategory(),
+                t.getDescription(),
+                t.getTransactionDate(),
+                t.getAccount().getId()
+        );
     }
 }

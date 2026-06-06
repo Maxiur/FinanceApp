@@ -28,8 +28,9 @@ public class GlobalExceptionHandler {
     // Łapie error 404 i zwraca Not Found
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleResourceNotFoundException(ResourceNotFoundException ex) {
-        return new ErrorResponse(LocalDateTime.now(), HttpStatus.NOT_FOUND.value(), "Nie znaleziono!", ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.NOT_FOUND.value(), "Nie znaleziono!", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON).body(error);
     }
 
     // Łapie error 409 i zwraca Conflict
@@ -43,7 +44,6 @@ public class GlobalExceptionHandler {
     // Łapie error 422 i zwraca Unprocessable Entity
     @ExceptionHandler(UnprocessableContentException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_CONTENT)
-    @ResponseBody
     public ResponseEntity<ErrorResponse> handleUnprocessableEntityException(UnprocessableContentException ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.UNPROCESSABLE_CONTENT.value(), "Nie można przetworzyć!", ex.getMessage());
 

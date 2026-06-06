@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
+@Validated
 @RequiredArgsConstructor
 public class TransactionController {
     private final TransactionService transactionService;
@@ -43,7 +45,8 @@ public class TransactionController {
         String csvData = transactionService.exportToCsv(idOrName);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "atttachment; filename=\"transakcje.csv\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"transakcje.csv\"")
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv")
                 .body(csvData);
     }
 
