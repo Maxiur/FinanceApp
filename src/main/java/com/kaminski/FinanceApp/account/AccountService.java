@@ -2,6 +2,7 @@ package com.kaminski.FinanceApp.account;
 
 import com.kaminski.FinanceApp.exception.ConflictException;
 import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
+import com.kaminski.FinanceApp.exception.UnprocessableContentException;
 import com.kaminski.FinanceApp.transaction.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    // TODO żeby nie ładować całej bazy do RAM
+    // żeby nie ładować całej bazy do RAM można używać PAGE'ów
     // Wszystkie konta
     public List<AccountResponse> getAllAccounts() {
         return accountRepository.findAll().stream()
@@ -44,7 +45,7 @@ public class AccountService {
         Account account = resolveAccount(idOrName);
 
         if (transactionRepository.existsByAccountId(account.getId())) {
-            throw new ConflictException("Nie można usunąć konta, które ma historię transakcji!");
+            throw new UnprocessableContentException("Nie można usunąć konta, które ma historię transakcji!");
         }
         accountRepository.delete(account);
     }
@@ -58,7 +59,7 @@ public class AccountService {
         try {
             Long numericId = Long.parseLong(param);
             if (numericId <= 0) {
-                throw new ConflictException("ID konta musi być liczbą dodatnią!");
+                throw new UnprocessableContentException("ID konta musi być liczbą dodatnią!");
             }
             return accountRepository.findById(numericId)
                     .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o ID: " + numericId));

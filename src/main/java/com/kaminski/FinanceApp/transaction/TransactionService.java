@@ -3,9 +3,8 @@ package com.kaminski.FinanceApp.transaction;
 import com.kaminski.FinanceApp.account.Account;
 import com.kaminski.FinanceApp.account.AccountRepository;
 
-import com.kaminski.FinanceApp.account.AccountResponse;
-import com.kaminski.FinanceApp.exception.ConflictException;
 import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
+import com.kaminski.FinanceApp.exception.UnprocessableContentException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,24 +21,17 @@ public class TransactionService {
 
     public List<TransactionResponse> getTransactionsForAccount(String accountId, LocalDate from, LocalDate to, String category) {
         Account account = resolveAccount(accountId);
+        // Konwersja LocalDate na LocalDateTime
+        // 'from' ustawiamy na początek dnia (00:00:00)
+        LocalDateTime fromDateTime = (from != null) ? from.atStartOfDay() : null;
+        // 'to' ustawiamy na koniec dnia (23:59:59), żeby łapało transakcje z tego dnia
+        LocalDateTime toDateTime = (to != null) ? to.atTime(23, 59, 59) : null;
 
-        // TODO żeby nie ładować całej bazy do RAM
-        return transactionRepository.findAll().stream()
-                .filter(t -> t.getAccount().getId().equals(account.getId()))
-                // Jeśli 'from' nie jest nullem, odrzucamy transakcje młodze od 'from'
-                .filter(t -> from == null || !t.getTransactionDate().toLocalDate().isBefore(from))
-                // Jeśli 'to' nie jest nullem, odrzucamy transakcje nowsze niż 'to'
-                .filter(t -> to == null || !t.getTransactionDate().toLocalDate().isAfter(to))
-                // Jeśli 'category' nie jest nullem, sprawdzamy czy kategoria się zgadza (ignorując wielkość liter)
-                .filter(t -> category == null || t.getCategory().equalsIgnoreCase(category))
+        return transactionRepository.findFilteredTransactions(account.getId(), fromDateTime, toDateTime, category)
+                .stream()
                 .map(t -> new TransactionResponse(
-                        t.getId(),
-                        t.getAmount(),
-                        t.getType(),
-                        t.getCategory(),
-                        t.getDescription(),
-                        t.getTransactionDate(),
-                        t.getAccount().getId()
+                        t.getId(), t.getAmount(), t.getType(), t.getCategory(),
+                        t.getDescription(), t.getTransactionDate(), t.getAccount().getId()
                 ))
                 .toList();
     }
@@ -81,6 +73,9 @@ public class TransactionService {
 
     @Transactional
     public void deleteTransaction(Long id) {
+        if (id <= 0) {
+            throw new UnprocessableContentException("ID konta musi być liczbą dodatnią!");
+        }
         // Szukanie transakcji
         Transaction transaction = transactionRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Nie znaleziono transakcji o podanym ID!"));
@@ -119,9 +114,8 @@ public class TransactionService {
     private Account resolveAccount(String param) {
         try {
             Long numericId = Long.parseLong(param);
-            System.out.println(numericId);
             if (numericId <= 0) {
-                throw new ConflictException("ID konta musi być liczbą dodatnią!");
+                throw new UnprocessableContentException("ID konta musi być liczbą dodatnią!");
             }
             return accountRepository.findById(numericId)
                     .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o ID: " + numericId));

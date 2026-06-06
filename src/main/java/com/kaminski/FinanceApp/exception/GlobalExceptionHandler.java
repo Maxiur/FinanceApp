@@ -1,8 +1,11 @@
 package com.kaminski.FinanceApp.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -22,7 +25,7 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Złe dane!", errors);
     }
 
-    // Lapie error 404 i zwraca Not Found
+    // Łapie error 404 i zwraca Not Found
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleResourceNotFoundException(ResourceNotFoundException ex) {
@@ -37,5 +40,14 @@ public class GlobalExceptionHandler {
     }
 
     // TODO 422 Unprocessable Entity for negative numbers and deleting account with transactions
+    // Łapie error 422 i zwraca Unprocessable Entity
+    @ExceptionHandler(UnprocessableContentException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+    @ResponseBody
+    public ResponseEntity<ErrorResponse> handleUnprocessableEntityException(UnprocessableContentException ex) {
+        ErrorResponse error = new ErrorResponse(LocalDateTime.now(), HttpStatus.UNPROCESSABLE_CONTENT.value(), "Nie można przetworzyć!", ex.getMessage());
 
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).contentType(MediaType.APPLICATION_JSON)
+                .body(error);
+    }
 }
