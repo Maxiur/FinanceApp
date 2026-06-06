@@ -20,6 +20,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            """)
     List<Transaction> findFilteredTransactions(Long accountId, LocalDateTime from, LocalDateTime to, String category);
 
+    List<Transaction> findByAccountId(Long accountId);
+
     boolean existsByAccountId(Long accountId);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.type = :type")

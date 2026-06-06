@@ -5,7 +5,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -40,7 +39,6 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(), "Konflikt!", ex.getMessage());
     }
 
-    // TODO 422 Unprocessable Entity for negative numbers and deleting account with transactions
     // Łapie error 422 i zwraca Unprocessable Entity
     @ExceptionHandler(UnprocessableContentException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_CONTENT)

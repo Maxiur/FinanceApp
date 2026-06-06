@@ -1,8 +1,8 @@
 package com.kaminski.FinanceApp.transaction;
 
 import com.kaminski.FinanceApp.account.Account;
-import com.kaminski.FinanceApp.account.AccountRepository;
 
+import com.opencsv.CSVWriter;
 import com.kaminski.FinanceApp.account.AccountResolver;
 import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
 import com.kaminski.FinanceApp.exception.UnprocessableContentException;
@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -86,20 +87,31 @@ public class TransactionService {
     public String exportToCsv(String accountId) {
         Account account = accountResolver.resolve(accountId);
 
-        List<Transaction> transactions = transactionRepository.findAll().stream()
-                .filter(t -> t.getAccount().getId().equals(account.getId()))
-                .toList();
+        List<Transaction> transactions = transactionRepository.findByAccountId(account.getId());
 
-        StringBuilder csv = new StringBuilder("ID,Kwota,Typ,Kategoria,Opis,Data\n");
+        try (StringWriter writer = new StringWriter();
+             CSVWriter csvWriter = new CSVWriter(writer)) {
 
-        transactions.forEach(t -> csv.append(t.getId()).append(",")
-                .append(t.getAmount()).append(",")
-                .append(t.getType()).append(",")
-                .append(t.getCategory()).append(",")
-                .append(t.getDescription() == null ? "" : t.getDescription()).append(",")
-                .append(t.getTransactionDate()).append("\n"));
+            // Nagłówek
+            csvWriter.writeNext(new String[]{"ID", "Kwota", "Typ", "Kategoria", "Opis", "Data"});
 
-        return csv.toString();
+            // Dane
+            for (Transaction t : transactions) {
+                String[] row = {
+                        t.getId().toString(),
+                        t.getAmount().toString(),
+                        t.getType().toString(),
+                        t.getCategory(),
+                        t.getDescription() == null ? "" : t.getDescription(),
+                        t.getTransactionDate().toString()
+                };
+                csvWriter.writeNext(row);
+            }
+
+            return writer.toString();
+        } catch (Exception e) {
+            throw new UnprocessableContentException("Nie udało się wygenerować CSV");
+        }
     }
 
     private TransactionResponse mapToResponse(Transaction t) {
