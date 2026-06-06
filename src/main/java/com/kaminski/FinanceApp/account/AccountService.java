@@ -39,15 +39,31 @@ public class AccountService {
 
     // Usuwanie konta
     @Transactional
-    public void deleteAccount(Long id) {
-        if (transactionRepository.existsByAccountId(id)) {
+    public void deleteAccount(String idOrName) {
+        Account account = resolveAccount(idOrName);
+
+        if (transactionRepository.existsByAccountId(account.getId())) {
             throw new ConflictException("Nie można usunąć konta, które ma historię transakcji!");
         }
-        accountRepository.deleteById(id);
+        accountRepository.delete(account);
     }
 
-    public AccountResponse getAccountById(Long id) {
-        return accountRepository.findById(id).map(acc -> new AccountResponse(acc.getId(), acc.getName(), acc.getBalance()))
-                .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
+    public AccountResponse getAccountDetails(String param) {
+        Account account = resolveAccount(param);
+        return new AccountResponse(account.getId(), account.getName(), account.getBalance());
+    }
+
+    private Account resolveAccount(String param) {
+        try {
+            Long numericId = Long.parseLong(param);
+            if (numericId <= 0) {
+                throw new ConflictException("ID konta musi być liczbą dodatnią!");
+            }
+            return accountRepository.findById(numericId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o ID: " + numericId));
+        } catch (NumberFormatException e) {
+            return accountRepository.findByName(param)
+                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o nazwie: " + param));
+        }
     }
 }

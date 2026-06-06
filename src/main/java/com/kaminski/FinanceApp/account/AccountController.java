@@ -19,10 +19,10 @@ public class AccountController {
         return accountService.getAllAccounts();
     }
 
-    // GET /api/v1/accounts/{id} - Szczegóły konta z saldem
-    @GetMapping("/{id}")
-    public AccountResponse getById(@PathVariable Long id) {
-        return accountService.getAccountById(id);
+    // GET /api/v1/accounts/{idOrName} - Szczegóły konta z saldem
+    @GetMapping("/{idOrName}")
+    public AccountResponse getById(@PathVariable String id) {
+        return accountService.getAccountDetails(id);
     }
 
     // POST /api/v1/accounts - Utwórz nowe konto
@@ -33,10 +33,10 @@ public class AccountController {
         return accountService.createAccount(request);
     }
 
-    // DELETE /api/v1/accounts/{id} - Usuń konto
-    @DeleteMapping("/{id}")
+    // DELETE /api/v1/accounts/{idOrName} - Usuń konto
+    @DeleteMapping("/{idOrName}")
     @ResponseStatus(HttpStatus.NO_CONTENT) // StatusCode 204
-    public void delete(@PathVariable Long id) {
+    public void delete(@PathVariable String id) {
         accountService.deleteAccount(id);
     }
 }

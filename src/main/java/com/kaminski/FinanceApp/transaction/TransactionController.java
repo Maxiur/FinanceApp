@@ -18,29 +18,29 @@ import java.util.List;
 public class TransactionController {
     private final TransactionService transactionService;
 
-    // GET /api/v1/accounts/{accountId}/transactions?from=2026-01-01&to=2026-12-31&category=Jedzenie
-    @GetMapping(value = "/accounts/{accountId}/transactions")
+    // GET /api/v1/accounts/{idOrName}/transactions?from=2026-01-01&to=2026-12-31&category=Jedzenie
+    @GetMapping(value = "/accounts/{idOrName}/transactions")
     public List<TransactionResponse> getTransactions(
-            @PathVariable String accountId,
+            @PathVariable String idOrName,
             @RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required=false) String category) {
-        return transactionService.getTransactionsForAccount(accountId, from, to, category);
+        return transactionService.getTransactionsForAccount(idOrName, from, to, category);
     }
 
-    // POST /api/v1/accounts/{accountId}transactions - Dodanie transakcji
-    @PostMapping(value = "/accounts/{accountId}/transactions")
+    // POST /api/v1/accounts/{idOrName}transactions - Dodanie transakcji
+    @PostMapping(value = "/accounts/{idOrName}/transactions")
     @ResponseStatus(HttpStatus.CREATED) // Zwraca status 201
     public TransactionResponse addTransaction(
-            @PathVariable String accountId,
+            @PathVariable String idOrName,
             @Valid @RequestBody TransactionRequest request) {
-        return transactionService.addTransaction(accountId, request);
+        return transactionService.addTransaction(idOrName, request);
     }
 
-    // GET /api/v1/accounts/{accountId}/transactions/export
-    @GetMapping(value = "/accounts/{accountId}/transactions/export", produces = "text/csv")
-    public ResponseEntity<String> exportToCsv(@PathVariable String accountId) {
-        String csvData = transactionService.exportToCsv(accountId);
+    // GET /api/v1/accounts/{idOrName}/transactions/export
+    @GetMapping(value = "/accounts/{idOrName}/transactions/export", produces = "text/csv")
+    public ResponseEntity<String> exportToCsv(@PathVariable String idOrName) {
+        String csvData = transactionService.exportToCsv(idOrName);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "atttachment; filename=\"transakcje.csv\"")
@@ -48,7 +48,7 @@ public class TransactionController {
     }
 
     // DELETE /api/v1/transactions/{id} - Usunięcie transakcji
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/transactions/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT) // Zwraca status 204
     public void deleteTransaction(@PathVariable Long id) {
         transactionService.deleteTransaction(id);
