@@ -1,7 +1,11 @@
 package com.kaminski.FinanceApp.exception;
 
-public class ErrorResponse extends RuntimeException {
-    public ErrorResponse(String message) {
-        super(message);
-    }
-}
+import java.time.LocalDateTime;
+
+// Pudełko na Odpowiedź błędu
+public record ErrorResponse(
+        LocalDateTime timestamp,
+        int status,
+        String error,
+        String message
+) {}

@@ -1,5 +1,7 @@
 package com.kaminski.FinanceApp.account;
 
+import com.kaminski.FinanceApp.exception.ConflictException;
+import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
 import com.kaminski.FinanceApp.transaction.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,13 +37,13 @@ public class AccountService {
     @Transactional
     public void deleteAccount(Long id) {
         if (transactionRepository.existsByAccountId(id)) {
-            throw new RuntimeException("Nie można usunąć konta, które ma historię transakcji!");
+            throw new ConflictException("Nie można usunąć konta, które ma historię transakcji!");
         }
         accountRepository.deleteById(id);
     }
 
     public AccountResponse getAccountById(Long id) {
         return accountRepository.findById(id).map(acc -> new AccountResponse(acc.getId(), acc.getName(), acc.getBalance()))
-                .orElseThrow(() -> new RuntimeException("Nie znaleziono konta o podanym ID!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
     }
 }

@@ -4,6 +4,7 @@ import com.kaminski.FinanceApp.account.Account;
 import com.kaminski.FinanceApp.account.AccountRepository;
 
 import com.kaminski.FinanceApp.account.AccountResponse;
+import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +43,7 @@ public class TransactionService {
     public TransactionResponse addTransaction(TransactionRequest request) {
         // Szukamy konta
         Account account = accountRepository.findById(request.accountId()).orElseThrow(
-                () -> new RuntimeException("Nie znaleziono konta o podanym ID!"));
+                () -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
 
         // Aktualizacja salda konta
         if (request.type() == TransactionType.INCOME) {
@@ -79,7 +80,7 @@ public class TransactionService {
     public void deleteTransaction(Long id) {
         // Szukanie transakcji
         Transaction transaction = transactionRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("Nie znaleziono transakcji o podanym ID!"));
+                () -> new ResourceNotFoundException("Nie znaleziono transakcji o podanym ID!"));
 
         Account account = transaction.getAccount();
 
@@ -94,9 +95,7 @@ public class TransactionService {
     }
 
     public AccountResponse getAccountById(Long id) {
-        Account account = accountRepository.findById(id).orElseThrow(
-                () -> new RuntimeException("Nie znaleziono konta o podanym ID!")
-        );
-        return new AccountResponse(account.getId(), account.getName(), account.getBalance());
+        return accountRepository.findById(id).map(acc -> new AccountResponse(acc.getId(), acc.getName(), acc.getBalance()))
+                .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
     }
 }
