@@ -25,6 +25,10 @@ public class AccountService {
 
     // Nowe konto
     public AccountResponse createAccount(AccountRequest request) {
+        if (accountRepository.existsByName(request.name())) {
+            throw new ConflictException("Konto o nazwie '" + request.name() + "' już istnieje! Spróbuj inną nazwę!");
+        }
+
         // Saldo z Buildera domyślnie jest 0
         Account account = Account.builder()
                 .name(request.name()).build();

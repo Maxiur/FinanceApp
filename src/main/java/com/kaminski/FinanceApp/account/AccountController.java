@@ -20,7 +20,7 @@ public class AccountController {
     }
 
     // GET /api/v1/accounts/{id} - Szczegóły konta z saldem
-    @GetMapping
+    @GetMapping("/{id}")
     public AccountResponse getById(@PathVariable Long id) {
         return accountService.getAccountById(id);
     }

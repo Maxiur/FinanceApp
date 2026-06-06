@@ -19,10 +19,11 @@ public class TransactionController {
     // GET /api/v1/transactions?from=2026-01-01&to=2026-12-31&category=Jedzenie
     @GetMapping
     public List<TransactionResponse> getTransactions(
+            @RequestParam(required=false) Long accountId,
             @RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required=false) String category) {
-        return transactionService.getAllTransactions(from, to, category);
+        return transactionService.getAllTransactions(accountId, from, to, category);
     }
 
     // POST /api/v1/transactions - Dodanie transakcji

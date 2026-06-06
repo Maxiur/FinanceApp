@@ -4,6 +4,7 @@ import com.kaminski.FinanceApp.account.Account;
 import com.kaminski.FinanceApp.account.AccountRepository;
 
 import com.kaminski.FinanceApp.account.AccountResponse;
+import com.kaminski.FinanceApp.exception.ConflictException;
 import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,9 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
 
-    public List<TransactionResponse> getAllTransactions(LocalDate from, LocalDate to, String category) {
+    public List<TransactionResponse> getAllTransactions(Long accountId, LocalDate from, LocalDate to, String category) {
         return transactionRepository.findAll().stream()
+                .filter(t -> accountId == null || t.getAccount().getId().equals(accountId))
                 // Jeśli 'from' nie jest nullem, odrzucamy transakcje młodze od 'from'
                 .filter(t -> from == null || !t.getTransactionDate().toLocalDate().isBefore(from))
                 // Jeśli 'to' nie jest nullem, odrzucamy transakcje nowsze niż 'to'
@@ -41,9 +43,17 @@ public class TransactionService {
 
     @Transactional
     public TransactionResponse addTransaction(TransactionRequest request) {
-        // Szukamy konta
-        Account account = accountRepository.findById(request.accountId()).orElseThrow(
-                () -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
+        Account account;
+        // Szukamy po ID albo po nazwie.
+        if (request.accountId() != null) {
+            account = accountRepository.findById(request.accountId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
+        } else if (request.accountName() != null && !request.accountName().isBlank()) {
+            account = accountRepository.findByName(request.accountName())
+                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o nazwie: " + request.accountName()));
+        } else {
+            throw new ConflictException("Musisz podać accountId lub accountName!");
+        }
 
         // Aktualizacja salda konta
         if (request.type() == TransactionType.INCOME) {

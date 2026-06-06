@@ -7,10 +7,12 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 
 public record TransactionRequest(
+        // Opcjonalnie podajemy accountId, ale chcemy się posługiwać raczej nazwą
+        Long accountId,
+        @NotNull(message = "Wybierz konto do którego wysłać transakcję") String accountName,
         @NotNull(message = "Należy wypełnić kwotę!") @Positive(message = "Kwota musi być większa od zera!") BigDecimal amount,
         @NotNull(message = "Wybierz INCOME lub EXPENSE") TransactionType type,
         @NotBlank(message = "Wybierz kategorię") String category,
-        String description,
-        @NotNull(message = "Wybierz konto do którego wysłać transakcję") Long accountId
+        String description
         )
 {}
