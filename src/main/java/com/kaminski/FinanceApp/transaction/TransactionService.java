@@ -96,6 +96,25 @@ public class TransactionService {
         transactionRepository.delete(transaction);
     }
 
+    public String exportToCsv(String accountId) {
+        Account account = resolveAccount(accountId);
+
+        List<Transaction> transactions = transactionRepository.findAll().stream()
+                .filter(t -> t.getAccount().getId().equals(account.getId()))
+                .toList();
+
+        StringBuilder csv = new StringBuilder("ID,Kwota,Typ,Kategoria,Opis,Data\n");
+
+        transactions.forEach(t -> csv.append(t.getId()).append(",")
+                .append(t.getAmount()).append(",")
+                .append(t.getType()).append(",")
+                .append(t.getCategory()).append(",")
+                .append(t.getDescription() == null ? "" : t.getDescription()).append(",")
+                .append(t.getTransactionDate()).append("\n"));
+
+        return csv.toString();
+    }
+
     private Account getAccountById(Long id) {
         return accountRepository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
