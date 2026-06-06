@@ -35,4 +35,7 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleConflictException(ConflictException ex) {
         return new ErrorResponse(LocalDateTime.now(), HttpStatus.CONFLICT.value(), "Konflikt!", ex.getMessage());
     }
+
+    // TODO 422 Unprocessable Entity for negative numbers and deleting account with transactions
+
 }

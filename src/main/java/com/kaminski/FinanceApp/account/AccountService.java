@@ -16,6 +16,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
+    // TODO żeby nie ładować całej bazy do RAM
     // Wszystkie konta
     public List<AccountResponse> getAllAccounts() {
         return accountRepository.findAll().stream()

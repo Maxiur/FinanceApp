@@ -23,6 +23,7 @@ public class TransactionService {
     public List<TransactionResponse> getTransactionsForAccount(String accountId, LocalDate from, LocalDate to, String category) {
         Account account = resolveAccount(accountId);
 
+        // TODO żeby nie ładować całej bazy do RAM
         return transactionRepository.findAll().stream()
                 .filter(t -> t.getAccount().getId().equals(account.getId()))
                 // Jeśli 'from' nie jest nullem, odrzucamy transakcje młodze od 'from'
