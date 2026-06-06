@@ -11,27 +11,31 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/transactions")
+@RequestMapping("/api/v1/")
 @RequiredArgsConstructor
 public class TransactionController {
     private final TransactionService transactionService;
 
-    // GET /api/v1/transactions?from=2026-01-01&to=2026-12-31&category=Jedzenie
+    // GET /api/v1/accounts/{accountId}/transactions?from=2026-01-01&to=2026-12-31&category=Jedzenie
     @GetMapping
     public List<TransactionResponse> getTransactions(
-            @RequestParam(required=false) Long accountId,
+            @PathVariable String accountId,
             @RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required=false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required=false) String category) {
-        return transactionService.getAllTransactions(accountId, from, to, category);
+        return transactionService.getTransactionsForAccount(accountId, from, to, category);
     }
 
-    // POST /api/v1/transactions - Dodanie transakcji
+    // POST /api/v1/accounts/{accountId}transactions - Dodanie transakcji
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED) // Zwraca status 201
-    public TransactionResponse addTransaction(@Valid @RequestBody TransactionRequest request) {
-        return transactionService.addTransaction(request);
+    public TransactionResponse addTransaction(
+            @PathVariable String accountId,
+            @Valid @RequestBody TransactionRequest request) {
+        return transactionService.addTransaction(accountId, request);
     }
+
+    // TODO Dodać exportToCsv
 
     // DELETE /api/v1/transactions/{id} - Usunięcie transakcji
     @DeleteMapping("/{id}")

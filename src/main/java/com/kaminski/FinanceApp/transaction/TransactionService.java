@@ -20,9 +20,11 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
 
-    public List<TransactionResponse> getAllTransactions(Long accountId, LocalDate from, LocalDate to, String category) {
+    public List<TransactionResponse> getTransactionsForAccount(String accountId, LocalDate from, LocalDate to, String category) {
+        Account account = resolveAccount(accountId);
+
         return transactionRepository.findAll().stream()
-                .filter(t -> accountId == null || t.getAccount().getId().equals(accountId))
+                .filter(t -> t.getAccount().getId().equals(account.getId()))
                 // Jeśli 'from' nie jest nullem, odrzucamy transakcje młodze od 'from'
                 .filter(t -> from == null || !t.getTransactionDate().toLocalDate().isBefore(from))
                 // Jeśli 'to' nie jest nullem, odrzucamy transakcje nowsze niż 'to'
@@ -42,18 +44,8 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionResponse addTransaction(TransactionRequest request) {
-        Account account;
-        // Szukamy po ID albo po nazwie.
-        if (request.accountId() != null) {
-            account = accountRepository.findById(request.accountId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
-        } else if (request.accountName() != null && !request.accountName().isBlank()) {
-            account = accountRepository.findByName(request.accountName())
-                    .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o nazwie: " + request.accountName()));
-        } else {
-            throw new ConflictException("Musisz podać accountId lub accountName!");
-        }
+    public TransactionResponse addTransaction(String accountId, TransactionRequest request) {
+        Account account = resolveAccount(accountId);
 
         // Aktualizacja salda konta
         if (request.type() == TransactionType.INCOME) {
@@ -104,8 +96,22 @@ public class TransactionService {
         transactionRepository.delete(transaction);
     }
 
-    public AccountResponse getAccountById(Long id) {
-        return accountRepository.findById(id).map(acc -> new AccountResponse(acc.getId(), acc.getName(), acc.getBalance()))
-                .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
+    private Account getAccountById(Long id) {
+        return accountRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("Nie znaleziono konta o podanym ID!"));
+    }
+
+    private Account getAccountByName(String name) {
+        return accountRepository.findByName(name).orElseThrow(
+                () -> new ResourceNotFoundException("Nie znaleziono konta o podanej nazwie: " + name));
+    }
+
+    private Account resolveAccount(String accountParam) {
+        try {
+            Long id = Long.parseLong(accountParam);
+            return getAccountById(id);
+        } catch (NumberFormatException e) {
+            return getAccountByName(accountParam);
+        }
     }
 }
