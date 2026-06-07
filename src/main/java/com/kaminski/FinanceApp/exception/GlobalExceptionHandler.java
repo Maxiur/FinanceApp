@@ -3,6 +3,7 @@ package com.kaminski.FinanceApp.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -22,6 +23,14 @@ public class GlobalExceptionHandler {
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
         return new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Złe dane!", errors);
+    }
+
+    // Łapie błędy z @NotNull i zwraca 400 Bad Request
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        return new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Zły format danych!",
+                "Upewnij się, że pole type to dokładnie INCOME lub EXPENSE.");
     }
 
     // Łapie error 404 i zwraca Not Found
