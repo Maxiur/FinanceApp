@@ -3,8 +3,8 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: budget_db
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: zuzia123
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
