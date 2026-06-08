@@ -13,16 +13,28 @@ Do uruchomienia projektu wymagane są:
 
 ---
 
-### Krok po kroku
+### Sposób 1: Uruchomienie wszystkiego w Dockerze
 
-#### 1. Uruchomienie Bazy Danych (PostgreSQL)
-Upewnij się, że silnik Docker jest włączony, a następnie uruchom bazę danych oraz pgAdmin za pomocą pliku `docker-compose.yaml`:
-```bash
-docker-compose up -d
-```
-Spowoduje to uruchomienie:
-* Bazy danych PostgreSQL na porcie `5432` (baza: `budget_db`, użytkownik: `admin`)
-* Narzędzia pgAdmin na porcie `5050`
+Aplikacja oraz baza danych mogą zostać w pełni skompilowane i uruchomione w kontenerach Docker za pomocą jednej komendy. Nie musisz mieć zainstalowanej Javy lokalnie!
+
+1. Upewnij się, że silnik Docker jest uruchomiony.
+2. Wykonaj w katalogu głównym projektu komendę:
+   ```bash
+   docker-compose up --build -d
+   ```
+3. Aplikacja zostanie zbudowana i uruchomiona. Będzie dostępna pod adresem **[http://localhost:9091](http://localhost:9091)** (np. dokumentacja Swagger pod [http://localhost:9091/swagger-ui/index.html](http://localhost:9091/swagger-ui/index.html)).
+
+---
+
+### Sposób 2: Uruchomienie lokalne
+
+Jeśli chcesz uruchomić kod bezpośrednio na swojej maszynie (np. do debugowania):
+
+#### 1. Uruchomienie samej Bazy Danych w Dockerze
+Uruchom bazę danych:
+   ```bash
+   docker compose up db -d
+   ```
 
 #### 2. Konfiguracja zmiennych środowiskowych
 Zmienne połączenia do bazy danych są pobierane automatycznie z pliku `.env` znajdującego się w katalogu głównym projektu. Plik ten zawiera m.in.:
@@ -34,16 +46,18 @@ DB_PORT=5432
 DB_URL=jdbc:postgresql://localhost:5432/budget_db
 ```
 
-#### 3. Uruchomienie Aplikacji
+#### 3. Uruchomienie Aplikacji lokalnie
 Uruchom serwer Spring Boot za pomocą Gradle Wrapper:
 ```bash
 # Na Windows:
-.\gradlew bootRun
+$env:JAVA_HOME="C:\Program Files\Java\jdk-25"; .\gradlew.bat bootRun
 
 # Na macOS/Linux:
 ./gradlew bootRun
 ```
 Aplikacja zostanie uruchomiona na porcie **`9091`**.
+
+---
 
 #### 4. Uruchomienie Testów
 Aby wyczyścić kompilację i odpalić pełne testy (jednostkową oraz integracyjną):

@@ -3,6 +3,7 @@ package com.kaminski.FinanceApp.summary;
 import com.kaminski.FinanceApp.transaction.Transaction;
 import com.kaminski.FinanceApp.transaction.TransactionRepository;
 import com.kaminski.FinanceApp.transaction.TransactionType;
+import com.kaminski.FinanceApp.config.AppProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SummaryService {
     private final TransactionRepository transactionRepository;
+    private final AppProperties appProperties;
+
+    public Map<String, BigDecimal> getLimits() {
+        return appProperties.getLimits();
+    }
 
     public SummaryResponse getSummary() {
         List<Transaction> transactions = transactionRepository.findAll();
