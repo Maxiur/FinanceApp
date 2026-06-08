@@ -29,8 +29,7 @@ dependencies {
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
-	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
-	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	runtimeOnly("org.springframework.boot:spring-boot-docker-compose")
 	testCompileOnly("org.projectlombok:lombok")
@@ -40,4 +39,18 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+
+	// Load .env variables for the test process
+	val envFile = file(".env")
+	if (envFile.exists()) {
+		envFile.readLines().forEach { line ->
+			val trimmed = line.trim()
+			if (trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
+				val parts = trimmed.split("=", limit = 2)
+				if (parts.size == 2) {
+					environment(parts[0].trim(), parts[1].trim())
+				}
+			}
+		}
+	}
 }

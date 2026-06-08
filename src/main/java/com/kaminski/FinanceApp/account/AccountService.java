@@ -13,12 +13,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
-    // Wstrzykujemy repozytorium
     private final AccountResolver accountResolver;
+    // Wstrzykujemy repozytorium
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    // żeby nie ładować całej bazy do RAM można używać PAGE'ów
+    // TODO żeby nie ładować całej bazy do RAM można używać PAGE'ów
     // Wszystkie konta
     public List<AccountResponse> getAllAccounts() {
         return accountRepository.findAll().stream()

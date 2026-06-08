@@ -4,29 +4,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    // Łapie błędy z walidacji (np. @Positive, @NotBlank) i zwraca 400 Bad Request
-//    @ExceptionHandler(MethodArgumentNotValidException.class)
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    public ErrorResponse handleValidationException(MethodArgumentNotValidException ex) {
-//        String errors = ex.getBindingResult().getFieldErrors().stream()
-//                .map(e -> e.getField() + ": " + e.getDefaultMessage())
-//                .collect(Collectors.joining(", "));
-//        return new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Złe dane!", errors);
-//    }
 
     @ExceptionHandler({
             MethodArgumentNotValidException.class,
