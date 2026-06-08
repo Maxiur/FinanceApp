@@ -1,5 +1,7 @@
 package com.kaminski.FinanceApp.transaction;
 
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 import com.kaminski.FinanceApp.account.Account;
 import com.kaminski.FinanceApp.account.AccountRepository;
@@ -19,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class TransactionControllerTest {
 
     @Autowired
