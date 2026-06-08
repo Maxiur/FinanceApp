@@ -1,6 +1,5 @@
 package com.kaminski.FinanceApp.account;
 
-import org.junit.jupiter.api.AfterEach;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 import com.kaminski.FinanceApp.transaction.TransactionRepository;
@@ -19,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional // Sprzątanie po sobie
-class AccountControllerTest {
+class AccountControllerTest extends com.kaminski.FinanceApp.BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc; // wirtualny Postman

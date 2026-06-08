@@ -2,6 +2,7 @@ package com.kaminski.FinanceApp.transaction;
 
 import com.kaminski.FinanceApp.account.Account;
 import com.kaminski.FinanceApp.account.AccountResolver;
+import com.kaminski.FinanceApp.config.AppProperties;
 import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
 import com.kaminski.FinanceApp.exception.UnprocessableContentException;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,9 @@ class TransactionServiceTest {
 
     @Mock
     private AccountResolver accountResolver;
+
+    @Mock
+    private AppProperties appProperties;
 
     @InjectMocks
     private TransactionService transactionService;
@@ -63,6 +67,7 @@ class TransactionServiceTest {
         );
 
         when(accountResolver.resolve("1")).thenReturn(account);
+        when(appProperties.getLimits()).thenReturn(java.util.Collections.emptyMap());
         when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> {
             Transaction t = inv.getArgument(0);
             t.setId(100L);
@@ -76,6 +81,37 @@ class TransactionServiceTest {
         assertEquals(new BigDecimal("-150.00"), account.getBalance());
         assertEquals(TransactionType.EXPENSE, response.type());
         verify(transactionRepository).save(any(Transaction.class));
+    }
+
+    @Test
+    void shouldAddExpenseAndWarnWhenLimitIsExceeded() {
+        // GIVEN
+        Account account = new Account(1L, "Karta", new BigDecimal("1000.00"));
+        TransactionRequest request = new TransactionRequest(
+                new BigDecimal("600.00"), TransactionType.EXPENSE, "Jedzenie", "Zakupy"
+        );
+
+        java.util.Map<String, BigDecimal> mockLimits = new java.util.HashMap<>();
+        mockLimits.put("jedzenie", new BigDecimal("500.00"));
+
+        when(accountResolver.resolve("1")).thenReturn(account);
+        when(appProperties.getLimits()).thenReturn(mockLimits);
+        when(transactionRepository.calculateExpensesForCategoryInMonth(any(), any(), any()))
+                .thenReturn(new BigDecimal("100.00"));
+
+        when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> {
+            Transaction t = inv.getArgument(0);
+            t.setId(101L);
+            return t;
+        });
+
+        // WHEN
+        TransactionResponse response = transactionService.addTransaction("1", request);
+
+        // THEN
+        assertNotNull(response.warning());
+        assertTrue(response.warning().contains("Przekroczono limit budżetu dla kategorii 'Jedzenie'"));
+        assertEquals(new BigDecimal("400.00"), account.getBalance());
     }
 
     @Test

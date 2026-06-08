@@ -1,6 +1,5 @@
 package com.kaminski.FinanceApp.transaction;
 
-import org.junit.jupiter.api.AfterEach;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 import com.kaminski.FinanceApp.account.Account;
@@ -22,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class TransactionControllerTest {
+class TransactionControllerTest extends com.kaminski.FinanceApp.BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -127,5 +126,25 @@ class TransactionControllerTest {
         // WHEN & THEN - Strzelamy w endpoint DELETE
         mockMvc.perform(delete("/api/v1/transactions/" + t.getId()))
                 .andExpect(status().isNoContent()); // Oczekujemy 204 No Content
+    }
+
+    @Test
+    void shouldReturnWarningWhenCategoryLimitExceeded() throws Exception {
+        // GIVEN - Dodajemy wydatek, który przekracza limit "jedzenie" (limit to 500, dodajemy 600)
+        TransactionRequest request = new TransactionRequest(
+                new BigDecimal("600.00"),
+                TransactionType.EXPENSE,
+                "Jedzenie",
+                "Duże zakupy"
+        );
+        String jsonRequest = objectMapper.writeValueAsString(request);
+
+        // WHEN & THEN
+        mockMvc.perform(post("/api/v1/accounts/" + testAccount.getId() + "/transactions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.warning").exists())
+                .andExpect(jsonPath("$.warning").value(org.hamcrest.Matchers.containsString("Przekroczono limit budżetu dla kategorii 'Jedzenie'")));
     }
 }

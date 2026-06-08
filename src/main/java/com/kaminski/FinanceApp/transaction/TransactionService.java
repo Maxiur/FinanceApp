@@ -4,6 +4,7 @@ import com.kaminski.FinanceApp.account.Account;
 
 import com.opencsv.CSVWriter;
 import com.kaminski.FinanceApp.account.AccountResolver;
+import com.kaminski.FinanceApp.config.AppProperties;
 import com.kaminski.FinanceApp.exception.ResourceNotFoundException;
 import com.kaminski.FinanceApp.exception.UnprocessableContentException;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.List;
 public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountResolver accountResolver;
+    private final AppProperties appProperties;
 
     public List<TransactionResponse> getTransactionsForAccount(String accountId, LocalDate from, LocalDate to, String category) {
         Account account = accountResolver.resolve(accountId);
@@ -39,6 +41,21 @@ public class TransactionService {
     @Transactional
     public TransactionResponse addTransaction(String accountId, TransactionRequest request) {
         Account account = accountResolver.resolve(accountId);
+
+        String warning = null;
+        if (request.type() == TransactionType.EXPENSE) {
+            String categoryKey = request.category().toLowerCase();
+            java.math.BigDecimal limit = appProperties.getLimits().get(categoryKey);
+            if (limit != null) {
+                LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                java.math.BigDecimal currentExpenses = transactionRepository.calculateExpensesForCategoryInMonth(
+                        account.getId(), request.category(), startOfMonth);
+                java.math.BigDecimal totalWithNew = currentExpenses.add(request.amount());
+                if (totalWithNew.compareTo(limit) > 0) {
+                    warning = "Przekroczono limit budżetu dla kategorii '" + request.category() + "'! Limit: " + limit + ", Suma wydatków w tym miesiącu: " + totalWithNew;
+                }
+            }
+        }
 
         // Aktualizacja salda konta
         if (request.type() == TransactionType.INCOME) {
@@ -60,7 +77,7 @@ public class TransactionService {
         // Zapis transakcji do DB
         Transaction savedTransaction = transactionRepository.save(transaction);
 
-        return mapToResponse(savedTransaction);
+        return mapToResponse(savedTransaction, warning);
     }
 
     @Transactional
@@ -115,6 +132,10 @@ public class TransactionService {
     }
 
     private TransactionResponse mapToResponse(Transaction t) {
+        return mapToResponse(t, null);
+    }
+
+    private TransactionResponse mapToResponse(Transaction t, String warning) {
         return new TransactionResponse(
                 t.getId(),
                 t.getAmount(),
@@ -122,7 +143,8 @@ public class TransactionService {
                 t.getCategory(),
                 t.getDescription(),
                 t.getTransactionDate(),
-                t.getAccount().getId()
+                t.getAccount().getId(),
+                warning
         );
     }
 }

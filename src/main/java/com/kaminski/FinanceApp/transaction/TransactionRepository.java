@@ -29,4 +29,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT t.category, SUM(t.amount) FROM Transaction t where t.type = 'EXPENSE' GROUP BY t.category")
     List<Object[]> getExpensesGroupedByCategory();
+
+    @Query("""
+           SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t
+           WHERE t.account.id = :accountId
+           AND t.type = 'EXPENSE'
+           AND LOWER(t.category) = LOWER(:category)
+           AND t.transactionDate >= :startDate
+           """)
+    BigDecimal calculateExpensesForCategoryInMonth(
+            @Param("accountId") Long accountId,
+            @Param("category") String category,
+            @Param("startDate") LocalDateTime startDate
+    );
 }
