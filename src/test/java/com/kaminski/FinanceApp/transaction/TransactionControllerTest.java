@@ -40,9 +40,6 @@ class TransactionControllerTest extends com.kaminski.FinanceApp.BaseIntegrationT
 
     @BeforeEach
     void setUp() {
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-
         // Tworzymy skarbonkę na potrzeby testów
         testAccount = Account.builder()
                 .name("Konto testowe")

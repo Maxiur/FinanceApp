@@ -20,7 +20,7 @@ Aplikacja oraz baza danych mogą zostać w pełni skompilowane i uruchomione w k
 1. Upewnij się, że silnik Docker jest uruchomiony.
 2. Wykonaj w katalogu głównym projektu komendę:
    ```bash
-   docker-compose up --build -d
+   docker compose up --build -d
    ```
 3. Aplikacja zostanie zbudowana i uruchomiona. Będzie dostępna pod adresem **[http://localhost:9091](http://localhost:9091)** (np. dokumentacja Swagger pod [http://localhost:9091/swagger-ui/index.html](http://localhost:9091/swagger-ui/index.html)).
 
@@ -37,7 +37,11 @@ Uruchom bazę danych:
    ```
 
 #### 2. Konfiguracja zmiennych środowiskowych
-Zmienne połączenia do bazy danych są pobierane automatycznie z pliku `.env` znajdującego się w katalogu głównym projektu. Plik ten zawiera m.in.:
+Zmienne połączenia do bazy danych są pobierane automatycznie z pliku `.env` znajdującego się w katalogu głównym projektu. 
+
+> Wiem, że nie powinno się udostępniać plików `.env` w repozytorium, ale aby przyśpieszyć udostępniam.
+
+Plik ten zawiera m.in.:
 ```env
 DB_NAME=budget_db
 DB_USER=admin

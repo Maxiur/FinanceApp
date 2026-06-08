@@ -32,13 +32,6 @@ class AccountControllerTest extends com.kaminski.FinanceApp.BaseIntegrationTest 
     @Autowired
     private TransactionRepository transactionRepository;
 
-    // Zanim odpalimy jakikolwiek test, czyścimy bazę, żeby testy nie wchodziły sobie w drogę!
-    @BeforeEach
-    void setUp() {
-        transactionRepository.deleteAll();
-        accountRepository.deleteAll();
-    }
-
     @Test
     void shouldCreateNewAccountSuccessfully() throws Exception {
         // GIVEN - przygotowujemy request z JSON-em
