@@ -22,7 +22,7 @@ Aplikacja oraz baza danych mogą zostać w pełni skompilowane i uruchomione w k
    ```bash
    docker compose up --build -d
    ```
-3. Aplikacja zostanie zbudowana i uruchomiona. Będzie dostępna pod adresem **[http://localhost:9091](http://localhost:9091)** (np. dokumentacja Swagger pod [http://localhost:9091/swagger-ui/index.html](http://localhost:9091/swagger-ui/index.html)).
+3. Aplikacja zostanie zbudowana i uruchomiona. Będzie dostępna pod adresem **[http://localhost:9091](http://localhost:9091)** (należy wejść do Swagger'a pod [http://localhost:9091/swagger-ui/index.html](http://localhost:9091/swagger-ui/index.html)).
 
 ---
 
